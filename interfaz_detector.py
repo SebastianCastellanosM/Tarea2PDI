@@ -31,7 +31,7 @@ def cargar_imagen():
     # Mostrar imagen en la interfaz
     imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
     imagen_pil = Image.fromarray(imagen_rgb)
-    imagen_pil = imagen_pil.resize((256, 256))  # ajustar tamaño visual
+    imagen_pil = imagen_pil.resize((256, 256)) 
     imagen_tk = ImageTk.PhotoImage(imagen_pil)
     lbl_imagen.config(image=imagen_tk)
     lbl_imagen.image = imagen_tk
