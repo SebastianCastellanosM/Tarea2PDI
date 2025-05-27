@@ -3,24 +3,30 @@ from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
-from skimage.feature import hog
+from skimage.feature import local_binary_pattern
 from skimage import color
 import pickle
 
-# Parámetros HOG (deben ser iguales que en el entrenamiento)
-hog_params = {
-    'orientations': 9,
-    'pixels_per_cell': (8, 8),
-    'cells_per_block': (2, 2),
-    'block_norm': 'L2-Hys'
-}
+# Parámetros LBP
+radius = 1
+n_points = 8 * radius
+method = 'uniform'
 
-# Cargar modelo SVM guardado
-with open('modelos/svm_entrenado_hog.pkl', 'rb') as f:
+# Cargar modelo SVM entrenado con LBP
+with open('modelos/svm_entrenado_lbp.pkl', 'rb') as f:
     clf = pickle.load(f)
 
+def extraer_caracteristicas_lbp(imagen):
+    imagen = cv2.resize(imagen, (64, 128))
+    imagen_gris = color.rgb2gray(imagen)
+
+    lbp = local_binary_pattern(imagen_gris, n_points, radius, method)
+    n_bins = int(lbp.max() + 1)
+    hist, _ = np.histogram(lbp.ravel(), bins=n_bins, range=(0, n_bins), density=True)
+    return hist.reshape(1, -1)
+
 def cargar_imagen():
-    ruta = filedialog.askopenfilename(filetypes=[("Imagenes", "*.jpg *.jpeg *.png *.bmp")])
+    ruta = filedialog.askopenfilename(filetypes=[("Imágenes", "*.jpg *.jpeg *.png *.bmp")])
     if not ruta:
         return
     imagen = cv2.imread(ruta)
@@ -31,15 +37,13 @@ def cargar_imagen():
     # Mostrar imagen en la interfaz
     imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
     imagen_pil = Image.fromarray(imagen_rgb)
-    imagen_pil = imagen_pil.resize((256, 256)) 
+    imagen_pil = imagen_pil.resize((256, 256))
     imagen_tk = ImageTk.PhotoImage(imagen_pil)
     lbl_imagen.config(image=imagen_tk)
     lbl_imagen.image = imagen_tk
 
-    # Procesar y predecir
-    img_resized = cv2.resize(imagen, (64, 128))
-    img_gray = color.rgb2gray(img_resized)
-    caracteristicas = hog(img_gray, visualize=False, **hog_params).reshape(1, -1)
+    # Extraer características y predecir
+    caracteristicas = extraer_caracteristicas_lbp(imagen)
     prediccion = clf.predict(caracteristicas)[0]
 
     texto = "Peatón detectado" if prediccion == 1 else "No hay peatón"
@@ -47,7 +51,7 @@ def cargar_imagen():
 
 # Crear ventana principal
 ventana = tk.Tk()
-ventana.title("Detector de Peatones")
+ventana.title("Detector SVM con LBP")
 
 btn_cargar = tk.Button(ventana, text="Cargar imagen", command=cargar_imagen)
 btn_cargar.pack(pady=10)
