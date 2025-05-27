@@ -1,4 +1,4 @@
-# Tarea 2 - Procesamiento Digital de Imágenes 🧠📷
+# Tarea 2 - Procesamiento Digital de Imágenes 
 
 Este proyecto consiste en el desarrollo de un sistema de **detección de peatones** a partir de imágenes estáticas, utilizando técnicas de **extracción de características** (HOG y LBP) y clasificación con **SVM (Support Vector Machine)**.
 
